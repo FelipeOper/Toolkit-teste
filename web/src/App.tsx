@@ -15,12 +15,12 @@ const MODEL = `${import.meta.env.BASE_URL}fh540.glb.txt`  // GLB em base64
 const STORE = 'fh540-damages-v1'
 
 const VIEWS: Record<string, { pos: [number, number, number]; target: [number, number, number] }> = {
-  'Frente': { pos: [0, 2.4, -13], target: [0, 1.6, 2] },
-  '3/4': { pos: [-7.6, 3.6, -8.4], target: [0, 1.5, 2.3] },
-  'Lateral E': { pos: [-15, 2.4, 3], target: [0, 1.5, 3] },
-  'Lateral D': { pos: [15, 2.4, 3], target: [0, 1.5, 3] },
-  'Traseira': { pos: [0, 2.6, 15], target: [0, 1.5, 3] },
-  'Topo': { pos: [0, 15, 3.5], target: [0, 0, 3.4] },
+  'Frente': { pos: [0, 2.4, -13], target: [0, 1.6, 1.8] },
+  '3/4': { pos: [-7.6, 3.6, -8.4], target: [0, 1.5, 1.7] },
+  'Lateral E': { pos: [-15, 2.4, 1.8], target: [0, 1.5, 1.8] },
+  'Lateral D': { pos: [15, 2.4, 1.8], target: [0, 1.5, 1.8] },
+  'Traseira': { pos: [0, 2.6, 12.5], target: [0, 1.5, 1.8] },
+  'Topo': { pos: [0, 16, 1.8], target: [0, 0, 1.7] },
 }
 
 function CameraRig({ view, controls }: { view: string; controls: React.RefObject<OrbitControlsImpl | null> }) {
@@ -119,15 +119,15 @@ export default function App() {
             </group>
           )}
           {/* plataforma */}
-          <mesh rotation-x={-Math.PI / 2} position={[0, -0.01, 3.2]} receiveShadow>
+          <mesh rotation-x={-Math.PI / 2} position={[0, -0.01, 1.8]} receiveShadow>
             <circleGeometry args={[11, 96]} />
             <meshStandardMaterial color="#111a2e" metalness={0.4} roughness={0.55} />
           </mesh>
-          <mesh rotation-x={-Math.PI / 2} position={[0, 0.002, 3.2]}>
+          <mesh rotation-x={-Math.PI / 2} position={[0, 0.002, 1.8]}>
             <ringGeometry args={[10.6, 10.8, 96]} />
             <meshBasicMaterial color="#3b82f6" />
           </mesh>
-          <ContactShadows position={[0, 0.01, 3.2]} opacity={0.5} scale={30} blur={2.5} far={4} />
+          <ContactShadows position={[0, 0.01, 1.8]} opacity={0.5} scale={30} blur={2.5} far={4} />
           {hover && (
             <Html position={hover.point} style={{ pointerEvents: 'none' }}>
               <div className="tip">{partInfo(hover.name).label}</div>

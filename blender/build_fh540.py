@@ -16,6 +16,20 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
 KEEP = []  # objetos que vao para o .glb
 
+# Medidas de referencia (lateral Volvo FH 6x4: cota 4100 mm eixo dianteiro -> ultimo eixo; pneu 1,03 m)
+# CONFIRMAR com trena no caminhao real (entre-eixos varia por configuracao).
+D1, D2 = 2.74, 4.10          # eixos trativos (y); dianteiro em y=0
+FW_Y = 3.25                  # centro da quinta roda
+FRAME_END = D2 + 0.90        # fim do chassi
+CAB_BOTTOM = 1.15            # piso da cabine (z)
+ROOF = 3.70                  # teto Globetrotter (z)
+
+
+def rear(z):
+    """y da traseira da cabine na altura z (a traseira inclina para tras embaixo)."""
+    return 1.48 - 0.34 * (z - CAB_BOTTOM) / (3.60 - CAB_BOTTOM)
+
+
 
 # ---------------------------------------------------------------- materiais
 def mat(name, color, metallic=0.0, rough=0.5, alpha=1.0, image=None, emit=0.0):
@@ -219,12 +233,12 @@ SIDES = {"L": 1, "R": -1}  # L = esquerda (lado do motorista) = +x
 
 # ================================================================ CABINE
 # ---- casca principal (visual hull: silhueta lateral x silhueta frontal)
-side = [(1.00, 1.22), (1.00, 3.50), (0.93, 3.62), (0.80, 3.69), (0.45, 3.73), (-0.10, 3.75), (-0.50, 3.73), (-0.80, 3.67), (-1.00, 3.45),
-        (-0.93, 3.12), (-1.02, 2.30), (-1.08, 2.28), (-1.08, 1.75), (-0.57, 1.75), (-0.57, 1.22)]
-frontsil = [(1.25, 1.22), (1.25, 2.95), (1.22, 3.25), (1.15, 3.48), (1.03, 3.64), (0.85, 3.73), (0.55, 3.78), (0.0, 3.79),
-            (-0.55, 3.78), (-0.85, 3.73), (-1.03, 3.64), (-1.15, 3.48), (-1.22, 3.25), (-1.25, 2.95), (-1.25, 1.22)]
+side = [(rear(CAB_BOTTOM), CAB_BOTTOM), (rear(3.60), 3.60), (1.05, 3.67), (0.75, ROOF), (0.0, ROOF), (-0.40, 3.66), (-0.75, 3.61),
+        (-1.00, 3.45), (-0.93, 3.12), (-1.02, 2.30), (-1.08, 2.28), (-1.08, 1.75), (-0.57, 1.75), (-0.57, CAB_BOTTOM)]
+frontsil = [(1.25, CAB_BOTTOM), (1.25, 2.95), (1.22, 3.20), (1.15, 3.42), (1.03, 3.57), (0.85, 3.65), (0.55, 3.69), (0.0, 3.71),
+            (-0.55, 3.69), (-0.85, 3.65), (-1.03, 3.57), (-1.15, 3.42), (-1.22, 3.20), (-1.25, 2.95), (-1.25, CAB_BOTTOM)]
 A = prism("hullA", side, "x", -1.4, 1.4)
-B = prism("hullB", frontsil, "y", -1.2, 1.05)
+B = prism("hullB", frontsil, "y", -1.2, 1.7)
 boolean(A, B, "INTERSECT")
 trash(B)
 shell = rename(A, "cab_shell")
@@ -237,14 +251,14 @@ bevel(shell, 0.07, 3, 35)
 
 # ---- partes (cortes na casca)
 parts_def = {
-    "cab_door_L": (0.95, 1.4, -0.97, 0.0, 1.22, 3.12),
-    "cab_door_R": (-1.4, -0.95, -0.97, 0.0, 1.22, 3.12),
-    "cab_side_panel_L": (0.95, 1.4, 0.0, 0.62, 1.22, 3.12),
-    "cab_side_panel_R": (-1.4, -0.95, 0.0, 0.62, 1.22, 3.12),
-    "cab_rear_panel": (-1.4, 1.4, 0.62, 1.1, 1.22, 3.9),
-    "cab_roof": (-1.4, 1.4, -0.80, 0.62, 3.12, 3.9),
-    "cab_roof_front": (-1.4, 1.4, -1.2, -0.80, 3.56, 3.9),
-    "cab_visor": (-1.4, 1.4, -1.2, -0.80, 3.12, 3.56),
+    "cab_door_L": (0.95, 1.4, -0.97, 0.04, CAB_BOTTOM, 3.12),
+    "cab_door_R": (-1.4, -0.95, -0.97, 0.04, CAB_BOTTOM, 3.12),
+    "cab_side_panel_L": (0.95, 1.4, 0.04, 0.92, CAB_BOTTOM, 3.12),
+    "cab_side_panel_R": (-1.4, -0.95, 0.04, 0.92, CAB_BOTTOM, 3.12),
+    "cab_rear_panel": (-1.4, 1.4, 0.92, 1.8, CAB_BOTTOM, 3.9),
+    "cab_roof": (-1.4, 1.4, -0.80, 0.92, 3.12, 3.9),
+    "cab_roof_front": (-1.4, 1.4, -1.2, -0.80, 3.50, 3.9),
+    "cab_visor": (-1.4, 1.4, -1.2, -0.80, 3.12, 3.50),
     "cab_face_upper": (-1.4, 1.4, -1.2, -0.97, 1.75, 2.31),
 }
 core = bpy.data.objects.new("cab_structure", shell.data.copy())
@@ -258,6 +272,10 @@ for name, r in parts_def.items():
     boolean(p, reg, "INTERSECT")
     boolean(core, reg, "DIFFERENCE")
     trash(reg)
+    if name == "cab_rear_panel":  # nicho do pos-tratamento na traseira da cabine
+        rec = region(-0.62, 0.62, 1.15, 2.0, 1.0, 2.05)
+        boolean(p, rec)
+        trash(rec)
     finish(p, mats.get(name, "paint"), bev.get(name, 0.012), 2)
 trash(shell)
 finish(core, "paint", 0.0)
@@ -295,8 +313,8 @@ ws = prism("windshield", quad, "x", -1.13, 1.13)
 finish(ws, "glass", 0.0)
 for s, sx in SIDES.items():
     box(f"cab_window_{s}", (0.014, 0.83, 0.80), (sx * 1.256, -0.505, 2.72), "glass", 0.004)
-    box(f"cab_window_rear_{s}", (0.014, 0.50, 0.61), (sx * 1.256, 0.28, 2.755), "glass", 0.004)
-    box(f"cab_door_handle_{s}", (0.03, 0.22, 0.04), (sx * 1.265, -0.16, 1.73), "chrome", 0.01)
+    box(f"cab_window_rear_{s}", (0.014, 0.70, 0.64), (sx * 1.256, 0.43, 2.75), "glass", 0.004)
+    box(f"cab_door_handle_{s}", (0.03, 0.28, 0.05), (sx * 1.265, -0.17, 1.68), "chrome", 0.01)
     # espelhos
     for z, n in ((2.85, "up"), (2.05, "low")):
         box(f"mirror_arm_{n}_{s}", (0.30, 0.05, 0.05), (sx * 1.31, -0.93, z), "plastic", 0.01)
@@ -304,15 +322,23 @@ for s, sx in SIDES.items():
     box(f"mirror_glass_{s}", (0.17, 0.012, 0.78), (sx * 1.40, -0.485, 2.48), "plastic", 0.004)
     box(f"mirror_wide_{s}", (0.16, 0.20, 0.28), (sx * 1.40, -0.66, 2.12), "plastic", 0.04)
     box(f"mirror_conn_{s}", (0.05, 0.30, 0.05), (sx * 1.43, -0.80, 2.85), "plastic", 0.01)
-    # defletores traseiros e entrada de ar
-    box(f"cab_side_deflector_{s}", (0.07, 0.34, 2.2), (sx * 1.215, 1.15, 2.35), "plastic", 0.015)
-    ribs = [box(f"rib{i}", (0.34, 0.30, 0.018), (sx * 0.98, 1.15, 1.40 + i * 0.075), "adblue", 0.004, keep=False) for i in range(21)]
-    body = box("intake_body", (0.32, 0.28, 1.70), (sx * 0.98, 1.14, 2.25), "plastic", 0.02, keep=False)
+    # defletores traseiros e entrada de ar (seguem a inclinacao da traseira da cabine)
+    d = prism("defl", [(rear(1.25), 1.25), (rear(1.25) + 0.30, 1.25), (rear(3.40) + 0.30, 3.40), (rear(3.40), 3.40)], "x",
+              sx * 1.18, sx * 1.25)
+    finish(d, "plastic", 0.012, 2, keep=False)
+    rename(d, f"cab_side_deflector_{s}")
+    KEEP.append(d)
+    ang = math.atan(0.34 / (3.60 - CAB_BOTTOM))
+    ribs = [box(f"rib{i}", (0.34, 0.30, 0.018), (sx * 0.98, rear(1.45 + i * 0.09) + 0.17, 1.45 + i * 0.09), "adblue", 0.004,
+                rot=(ang, 0, 0), keep=False) for i in range(20)]
+    body = prism("intake_body", [(rear(1.35) + 0.02, 1.35), (rear(1.35) + 0.32, 1.35), (rear(3.25) + 0.32, 3.25), (rear(3.25) + 0.02, 3.25)],
+                 "x", sx * 0.82, sx * 1.14)
+    finish(body, "plastic", 0.02, 2, keep=False)
     join(f"cab_air_intake_{s}", [body] + ribs, "plastic")
     box(f"cab_step_lower_{s}", (0.34, 0.45, 0.05), (sx * 1.10, -0.78, 0.45), "steel", 0.01)
     box(f"cab_step_upper_{s}", (0.30, 0.40, 0.05), (sx * 1.10, -0.70, 0.84), "steel", 0.01)
-    box(f"cab_skirt_{s}", (0.06, 1.55, 0.10), (sx * 1.225, -0.20, 1.17), "plastic", 0.015)
-    box(f"mudguard_front_{s}", (0.36, 1.30, 0.06), (sx * 1.02, 0.0, 1.20), "plastic", 0.02)
+    box(f"cab_skirt_{s}", (0.06, 2.40, 0.10), (sx * 1.225, 0.25, CAB_BOTTOM - 0.05), "plastic", 0.015)
+    box(f"mudguard_front_{s}", (0.36, 1.30, 0.06), (sx * 1.02, 0.0, 1.17), "plastic", 0.02)
 
 # ---- face superior (rosto escuro), faixa Globetrotter, luzes de teto
 cyl("cab_logo", 0.125, 0.02, (0, -1.10, 1.90), "y", "chrome", 40)
@@ -375,23 +401,28 @@ for s, sx in SIDES.items():
 
 # ================================================================ CHASSI
 for s, sx in SIDES.items():
-    box(f"chassis_rail_{s}", (0.10, 7.0, 0.30), (sx * 0.43, 2.95, 0.85), "frame", 0.012)
-for i, y in enumerate((0.6, 1.9, 3.1, 4.3, 5.6)):
+    box(f"chassis_rail_{s}", (0.10, FRAME_END + 0.55, 0.30), (sx * 0.43, (FRAME_END - 0.55) / 2, 0.85), "frame", 0.012)
+for i, y in enumerate((0.6, 1.7, 2.6, 3.7, 4.6)):
     box(f"chassis_crossmember_{i}", (0.76, 0.09, 0.22), (0, y, 0.84), "frame", 0.01)
-box("deck_plate", (1.0, 0.70, 0.04), (0, 1.55, 1.02), "chrome", 0.005)
-cyl("driveshaft", 0.07, 4.2, (0, 3.2, 0.62), "y", "steel", 20)
-cyl("dpf_scr", 0.28, 0.78, (0.12, 1.18, 1.45), "x", "steel", 36, bev=0.0)
-cyl("air_tank", 0.15, 0.95, (0, 2.45, 0.48), "x", "adblue", 24)
-cyl("air_dryer", 0.07, 0.22, (-0.2, 2.2, 0.80), "z", "chrome", 16)
-box("ecu_chassis", (0.26, 0.32, 0.14), (0.15, 1.95, 0.70), "plastic", 0.015)
-box("ebs_module", (0.18, 0.22, 0.12), (-0.18, 3.0, 0.62), "plastic", 0.012)
+box("deck_plate", (1.0, 0.70, 0.04), (0, 2.00, 1.02), "chrome", 0.005)
+cyl("driveshaft", 0.07, D1 - 0.2, (0, (D1 + 0.2) / 2 + 0.1, 0.62), "y", "steel", 20)
+box("cab_rear_recess", (1.22, 0.04, 0.98), (0, 1.22, 1.52), "plastic", 0.01)
+cyl("dpf_scr", 0.27, 0.76, (0.10, 1.42, 1.50), "x", "steel", 36, bev=0.0)
+cyl("air_tank", 0.15, 0.95, (0, 2.20, 0.48), "x", "adblue", 24)
+cyl("air_dryer", 0.07, 0.22, (-0.2, 2.05, 0.80), "z", "chrome", 16)
+box("ecu_chassis", (0.26, 0.32, 0.14), (0.15, 1.75, 0.70), "plastic", 0.015)
+box("ebs_module", (0.18, 0.22, 0.12), (-0.18, 2.55, 0.62), "plastic", 0.012)
 
 # tanques (esquerda = +x ; direita = -x)
-box("fuel_tank_L", (0.64, 2.0, 0.64), (1.0 - 0.14, 2.15, 0.78), "alu", 0.07, seg=3)
-box("fuel_tank_R", (0.64, 1.53, 0.64), (-(1.0 - 0.14), 2.38, 0.78), "alu", 0.07, seg=3)
-box("adblue_tank", (0.62, 0.52, 0.55), (-(1.0 - 0.14), 1.36, 0.775), "adblue", 0.06, seg=3)
-cyl("adblue_cap", 0.05, 0.05, (-(1.0 - 0.14), 1.36, 1.075), "z", "bluecap", 16)
-box("battery_box", (0.66, 0.58, 0.64), (-(1.0 - 0.1), 0.80, 0.76), "battery", 0.03)
+TANK_Y0, TANK_Y1 = 0.72, D1 - 0.69         # do eixo dianteiro ate o para-lama traseiro
+xs = 1.0 - 0.14
+box("fuel_tank_L", (0.64, TANK_Y1 - TANK_Y0, 0.64), (xs, (TANK_Y0 + TANK_Y1) / 2, 0.78), "alu", 0.07, seg=3)
+BAT_L, ADB_L = 0.55, 0.33
+box("battery_box", (0.66, BAT_L, 0.64), (-(1.0 - 0.1), TANK_Y0 + BAT_L / 2, 0.76), "battery", 0.03)
+box("adblue_tank", (0.62, ADB_L, 0.55), (-xs, TANK_Y0 + BAT_L + ADB_L / 2, 0.775), "adblue", 0.05, seg=3)
+cyl("adblue_cap", 0.05, 0.05, (-xs, TANK_Y0 + BAT_L + ADB_L / 2, 1.075), "z", "bluecap", 16)
+fy0 = TANK_Y0 + BAT_L + ADB_L
+box("fuel_tank_R", (0.64, TANK_Y1 - fy0, 0.64), (-xs, (fy0 + TANK_Y1) / 2, 0.78), "alu", 0.07, seg=3)
 
 # ================================================================ RODAS
 TR, TW = 0.52, 0.295
@@ -410,10 +441,10 @@ def wheel(name, x, y, out):
 
 for s, sx in SIDES.items():
     wheel(f"F_{s}", sx * 1.02, 0.0, sx)
-    for tag, ay in (("D1", 3.70), ("D2", 5.05)):
+    for tag, ay in (("D1", D1), ("D2", D2)):
         wheel(f"{tag}_{s}_out", sx * 1.06, ay, sx)
         wheel(f"{tag}_{s}_in", sx * 0.68, ay, sx)
-for n, y in (("front", 0.0), ("drive1", 3.70), ("drive2", 5.05)):
+for n, y in (("front", 0.0), ("drive1", D1), ("drive2", D2)):
     cyl(f"axle_{n}", 0.075, 2.05, (0, y, TR), "x", "steel", 20)
     if n != "front":
         cyl(f"diff_{n}", 0.21, 0.5, (0, y, TR), "x", "steel", 28)
@@ -431,18 +462,18 @@ def fender(name, x, y, w=0.95):
 
 
 for s, sx in SIDES.items():
-    fender(f"mudguard_rear_{s}_1", sx * 0.88, 3.70)
-    fender(f"mudguard_rear_{s}_2", sx * 0.88, 5.05)
-    box(f"mudguard_rear_{s}_link", (0.95, 0.62, 0.07), (sx * 0.88, 4.375, 1.17), "plastic", 0.02)
-    box(f"mudflap_{s}", (0.90, 0.025, 0.42), (sx * 0.88, 5.77, 0.48), "rubber", 0.006)
-    box(f"rear_light_{s}", (0.20, 0.05, 0.12), (sx * 0.95, 6.46, 0.78), "red", 0.01)
-    box(f"side_marker_{s}", (0.012, 0.12, 0.04), (sx * 1.34, 5.70, 0.95), "amber", 0.004)
-box("rear_bumper_beam", (2.1, 0.12, 0.16), (0, 6.5, 0.68), "steel", 0.015)
+    fender(f"mudguard_rear_{s}_1", sx * 0.88, D1)
+    fender(f"mudguard_rear_{s}_2", sx * 0.88, D2)
+    box(f"mudguard_rear_{s}_link", (0.95, 0.60, 0.07), (sx * 0.88, (D1 + D2) / 2, 1.17), "plastic", 0.02)
+    box(f"mudflap_{s}", (0.90, 0.025, 0.42), (sx * 0.88, D2 + 0.72, 0.48), "rubber", 0.006)
+    box(f"rear_light_{s}", (0.20, 0.05, 0.12), (sx * 0.95, FRAME_END + 0.02, 0.78), "red", 0.01)
+    box(f"side_marker_{s}", (0.012, 0.12, 0.04), (sx * 1.34, D2 + 0.65, 0.95), "amber", 0.004)
+box("rear_bumper_beam", (2.1, 0.12, 0.16), (0, FRAME_END + 0.05, 0.68), "steel", 0.015)
 
 # ---- quinta roda (JOST)
-box("fifth_wheel_plate", (1.0, 1.0, 0.06), (0, 4.25, 1.03), "frame", 0.012)
-box("fifth_wheel_base", (0.72, 0.60, 0.18), (0, 4.25, 1.15), "steel", 0.02)
-cyl("fifth_wheel_top", 0.48, 0.08, (0, 4.25, 1.27), "z", "steel", 48, bev=0.012)
+box("fifth_wheel_plate", (1.0, 1.0, 0.06), (0, FW_Y, 1.03), "frame", 0.012)
+box("fifth_wheel_base", (0.72, 0.60, 0.18), (0, FW_Y, 1.15), "steel", 0.02)
+cyl("fifth_wheel_top", 0.48, 0.08, (0, FW_Y, 1.27), "z", "steel", 48, bev=0.012)
 
 # ================================================================ SAIDA / RENDER
 glb = os.path.join(ROOT, "models", "fh540.glb")
@@ -461,7 +492,7 @@ if "--render" in sys.argv:
     scene.cycles.samples = 40
     scene.cycles.use_denoising = True
     scene.render.resolution_x, scene.render.resolution_y = 1280, 960
-    bpy.ops.mesh.primitive_plane_add(size=80, location=(0, 3, 0))
+    bpy.ops.mesh.primitive_plane_add(size=80, location=(0, 2, 0))
     g = bpy.context.active_object
     g.data.materials.append(mat("floor", srgb("#8a7a68"), 0, 0.9))
     w = bpy.data.worlds.new("w")
@@ -475,10 +506,11 @@ if "--render" in sys.argv:
         "front": ((0, -16, 1.9), (0, 0, 1.9), 85),
         "front34": ((7.5, -9.5, 2.3), (0, 0.5, 1.8), 45),
         "front34R": ((-7.5, -9.5, 2.3), (0, 0.5, 1.8), 45),
-        "sideL": ((17, 1.2, 1.9), (0, 1.2, 1.9), 52),
+        "sideL": ((17, 1.8, 1.9), (0, 1.8, 1.9), 50),
+        "sideR": ((-17, 1.8, 1.9), (0, 1.8, 1.9), 50),
         "sideL_cab": ((9, -2.5, 2.2), (0, -0.2, 2.0), 50),
-        "rear34": ((-7, 13, 3.2), (0, 2.5, 1.5), 40),
-        "top": ((0, 2.5, 18), (0, 2.5, 0), 50),
+        "rear34": ((-7, 11.5, 3.2), (0, 2.0, 1.5), 40),
+        "top": ((0, 1.8, 18), (0, 1.8, 0), 50),
     }
     for vn, (cl, tg, lens) in views.items():
         if vsel and vn not in vsel:

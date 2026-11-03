@@ -37,6 +37,7 @@ const rules: Rule[] = [
   fixed(/^cab_logo_line/, 'cabine', 'Friso cromado do emblema'),
   fixed(/^cab_logo/, 'cabine', 'Emblema (logo)'),
   fixed(/^cab_cowl_strip/, 'cabine', 'Friso cromado do capô'),
+  fixed(/^cab_rear_recess/, 'cabine', 'Nicho traseiro do pós-tratamento'),
   fixed(/^antenna/, 'eletrica', 'Antena'),
   // ---- grade e frente
   fixed(/^grille_mesh_upper/, 'grade', 'Grade hexagonal superior'),

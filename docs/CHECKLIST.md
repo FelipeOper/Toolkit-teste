@@ -70,6 +70,8 @@ Objetivo: gerar em Blender (por script Python) um cavalo mecânico Volvo FH 540 
 ## Status
 - **v0.2 (atual)**: `blender/build_fh540.py` gera `models/fh540.glb` com 141 peças nomeadas (cabine do FH novo/Globetrotter por silhueta lateral x frontal, face escura, grade hexagonal, faróis em L, espelhos, degraus, defletores, tanques, bateria, Arla, pós-tratamento, quinta roda, rodas de 10 parafusos, para-lamas). Proporções tiradas das fotos de referência (cabine 2,50 m e pneu 1,04 m como escala). Renders em `renders/`.
 - Visualizador web em `web/` (ver `web/README.md`): girar, zoom, clicar na peça, avaria por gravidade, orçamento (localStorage). Todas as peças têm nome em português (`web/src/parts.ts`).
+- **v0.3**: corrigido com a lateral de referência (cota 4100 mm): eixo dianteiro → 1º eixo trativo **2,74 m**, → último eixo **4,10 m**; traseira da cabine a **+1,48 m** (inclinada para trás embaixo); quinta roda em 3,25 m; teto Globetrotter 3,70 m. Tanques, bateria e Arla redimensionados para caber entre a cabine e o para-lama. **Confirmar o entre-eixos real do caminhão com trena** (varia por configuração) e ajustar `D1`, `D2` e `FW_Y` no topo de `blender/build_fh540.py`.
+- Referências usadas só como consulta de proporção (fotos do cliente, imagem de lateral com cota, prévias de modelos 3D de terceiros); nada delas é copiado nem versionado.
 - Fotos de referência ficam só localmente (`reference/fh540/`, não versionadas).
 
 ### Ainda falta no modelo
