@@ -1,11 +1,10 @@
 import { useEffect, useMemo } from 'react'
-import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import type { ThreeEvent } from '@react-three/fiber'
 import { SEVERITY_COLOR, type Damage } from './damage'
 
 interface Props {
-  url: string
+  scene: THREE.Object3D
   damages: Record<string, Damage>
   selected: string | null
   hovered: string | null
@@ -15,8 +14,7 @@ interface Props {
 
 type Std = THREE.MeshStandardMaterial & { userData: { orig?: THREE.Color } }
 
-export function Truck({ url, damages, selected, hovered, onSelect, onHover }: Props) {
-  const { scene } = useGLTF(url)
+export function Truck({ scene, damages, selected, hovered, onSelect, onHover }: Props) {
   // clone para não compartilhar materiais entre instâncias
   const root = useMemo(() => {
     const c = scene.clone(true)

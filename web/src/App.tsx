@@ -1,6 +1,7 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { ContactShadows, Environment, Html, Lightformer, OrbitControls, useGLTF } from '@react-three/drei'
+import { ContactShadows, Environment, Html, Lightformer, OrbitControls } from '@react-three/drei'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import * as THREE from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { Truck } from './Truck'
@@ -10,7 +11,7 @@ import {
   type Damage, type DamageType, type Service, type Severity,
 } from './damage'
 
-const MODEL = '/fh540.glb'
+const MODEL = `${import.meta.env.BASE_URL}fh540.glb.txt`  // GLB em base64
 const STORE = 'fh540-damages-v1'
 
 const VIEWS: Record<string, { pos: [number, number, number]; target: [number, number, number] }> = {
@@ -41,6 +42,27 @@ function CameraRig({ view, controls }: { view: string; controls: React.RefObject
   return null
 }
 
+/** Baixa o texto base64, decodifica para bytes e interpreta como GLB. */
+function useModel(url: string) {
+  const [scene, setScene] = useState<THREE.Object3D | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    let alive = true
+    fetch(url)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text() })
+      .then(b64 => {
+        const bin = atob(b64.trim())
+        const bytes = new Uint8Array(bin.length)
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+        new GLTFLoader().parse(bytes.buffer, '', g => { if (alive) setScene(g.scene) },
+          e => { if (alive) setError(String(e.message ?? e)) })
+      })
+      .catch(e => { if (alive) setError(String(e.message ?? e)) })
+    return () => { alive = false }
+  }, [url])
+  return { scene, error }
+}
+
 function loadDamages(): Record<string, Damage> {
   try { return JSON.parse(localStorage.getItem(STORE) || '{}') } catch { return {} }
 }
@@ -51,6 +73,7 @@ export default function App() {
   const [hover, setHover] = useState<{ name: string; point: THREE.Vector3 } | null>(null)
   const [view, setView] = useState('3/4')
   const controls = useRef<OrbitControlsImpl | null>(null)
+  const { scene: model, error: modelError } = useModel(MODEL)
 
   useEffect(() => {
     try { localStorage.setItem(STORE, JSON.stringify(damages)) } catch { /* sem storage */ }
@@ -82,19 +105,22 @@ export default function App() {
             <Lightformer form="rect" intensity={2} position={[-8, 3, 0]} scale={[10, 4, 1]} rotation-y={Math.PI / 2} />
             <Lightformer form="rect" intensity={2} position={[8, 3, 0]} scale={[10, 4, 1]} rotation-y={-Math.PI / 2} />
           </Environment>
-          <Suspense fallback={<Html center className="loading">Carregando modelo…</Html>}>
-            {/* o glTF exporta o comprimento no eixo -z; giramos 180° para a frente apontar para -z da cena */}
+          {!model && (
+            <Html center className="loading">{modelError ? `Erro ao carregar o modelo: ${modelError}` : 'Carregando modelo…'}</Html>
+          )}
+          {model && (
+            // o glTF exporta o comprimento no eixo -z; giramos 180° para a frente apontar para -z da cena
             <group rotation-y={Math.PI}>
-            <Truck
-              url={MODEL}
-              damages={damages}
-              selected={selected}
-              hovered={hover?.name ?? null}
-              onSelect={setSelected}
-              onHover={(name, point) => setHover(name && point ? { name, point: point.clone() } : null)}
-            />
+              <Truck
+                scene={model}
+                damages={damages}
+                selected={selected}
+                hovered={hover?.name ?? null}
+                onSelect={setSelected}
+                onHover={(name, point) => setHover(name && point ? { name, point: point.clone() } : null)}
+              />
             </group>
-          </Suspense>
+          )}
           {/* plataforma */}
           <mesh rotation-x={-Math.PI / 2} position={[0, -0.01, 3.2]} receiveShadow>
             <circleGeometry args={[11, 96]} />
@@ -226,4 +252,3 @@ function DamageForm({ name, existing, onSave, onRemove }: {
   )
 }
 
-useGLTF.preload(MODEL)
