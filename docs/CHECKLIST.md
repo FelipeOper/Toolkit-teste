@@ -68,7 +68,14 @@ Objetivo: gerar em Blender (por script Python) um cavalo mecânico Volvo FH 540 
 - [ ] Dashboard e pátio
 
 ## Status
-- v0 (blockout): `blender/build_fh540.py` gera `models/fh540_blockout.glb` (73 peças nomeadas) e renders em `renders/`. Proporções aproximadas, formas ainda caixas. Falta: câmera lateral enquadrada, formas da cabine FH, dados oficiais.
-- v0.1 (visualizador web): `web/` – girar, zoom, clicar na peça, avaria por gravidade, orçamento (localStorage). Ver `web/README.md`.
+- **v0.2 (atual)**: `blender/build_fh540.py` gera `models/fh540.glb` com 141 peças nomeadas (cabine do FH novo/Globetrotter por silhueta lateral x frontal, face escura, grade hexagonal, faróis em L, espelhos, degraus, defletores, tanques, bateria, Arla, pós-tratamento, quinta roda, rodas de 10 parafusos, para-lamas). Proporções tiradas das fotos de referência (cabine 2,50 m e pneu 1,04 m como escala). Renders em `renders/`.
+- Visualizador web em `web/` (ver `web/README.md`): girar, zoom, clicar na peça, avaria por gravidade, orçamento (localStorage). Todas as peças têm nome em português (`web/src/parts.ts`).
+- Fotos de referência ficam só localmente (`reference/fh540/`, não versionadas).
 
-Rodar: `python3 -m venv /tmp/venv-bpy && /tmp/venv-bpy/bin/pip install bpy==5.1.2 && /tmp/venv-bpy/bin/python blender/build_fh540.py --render`
+### Ainda falta no modelo
+- Curvatura dos painéis laterais e do teto (hoje a cabine é um sólido de facetas suaves).
+- Faróis mais fiéis (hoje: tira inclinada + unidade inferior), seta lateral, emblemas.
+- Chassi: suspensão a ar, feixes, mangueiras, cardã com cruzetas, escapamento.
+- Lateral pura E/D, topo e medidas com trena para calibrar.
+
+Rodar: `python3 -m venv /tmp/venv-bpy && /tmp/venv-bpy/bin/pip install bpy==5.1.2 pillow && /tmp/venv-bpy/bin/python blender/build_fh540.py --render --views front,front34`

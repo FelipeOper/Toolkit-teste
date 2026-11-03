@@ -7,7 +7,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import { Truck } from './Truck'
 import { partInfo } from './parts'
 import {
-  DAMAGE_TYPES, SERVICES, SEVERITIES, SEVERITY_COLOR, brl, suggest,
+  DAMAGE_TYPES, SERVICES, SEVERITIES, SEVERITY_COLOR, brl, defaultService, suggest,
   type Damage, type DamageType, type Service, type Severity,
 } from './damage'
 
@@ -16,7 +16,7 @@ const STORE = 'fh540-damages-v1'
 
 const VIEWS: Record<string, { pos: [number, number, number]; target: [number, number, number] }> = {
   'Frente': { pos: [0, 2.4, -13], target: [0, 1.6, 2] },
-  '3/4': { pos: [-9.5, 4.4, -10], target: [0, 1.4, 2.8] },
+  '3/4': { pos: [-7.6, 3.6, -8.4], target: [0, 1.5, 2.3] },
   'Lateral E': { pos: [-15, 2.4, 3], target: [0, 1.5, 3] },
   'Lateral D': { pos: [15, 2.4, 3], target: [0, 1.5, 3] },
   'Traseira': { pos: [0, 2.6, 15], target: [0, 1.5, 3] },
@@ -105,9 +105,6 @@ export default function App() {
             <Lightformer form="rect" intensity={2} position={[-8, 3, 0]} scale={[10, 4, 1]} rotation-y={Math.PI / 2} />
             <Lightformer form="rect" intensity={2} position={[8, 3, 0]} scale={[10, 4, 1]} rotation-y={-Math.PI / 2} />
           </Environment>
-          {!model && (
-            <Html center className="loading">{modelError ? `Erro ao carregar o modelo: ${modelError}` : 'Carregando modelo…'}</Html>
-          )}
           {model && (
             // o glTF exporta o comprimento no eixo -z; giramos 180° para a frente apontar para -z da cena
             <group rotation-y={Math.PI}>
@@ -140,6 +137,7 @@ export default function App() {
             minDistance={3} maxDistance={30} target={VIEWS['3/4'].target} />
           <CameraRig view={view} controls={controls} />
         </Canvas>
+        {!model && <div className="loading">{modelError ? `Erro ao carregar o modelo: ${modelError}` : 'Carregando modelo…'}</div>}
         <div className="hint">Arraste para girar · role para aproximar · clique em uma peça</div>
         <div className="legend">
           {SEVERITIES.map(s => (
@@ -151,7 +149,7 @@ export default function App() {
       <aside className="panel">
         <header>
           <h1>Volvo FH 540</h1>
-          <p>Cavalo mecânico 6x4 · modelo de teste (blockout)</p>
+          <p>Cavalo mecânico 6x4 Globetrotter · modelo em desenvolvimento</p>
         </header>
 
         {selected
@@ -188,9 +186,9 @@ function DamageForm({ name, existing, onSave, onRemove }: {
   const info = partInfo(name)
   const [type, setType] = useState<DamageType>(existing?.type ?? 'Amassado')
   const [severity, setSeverity] = useState<Severity>(existing?.severity ?? 'moderada')
-  const [service, setService] = useState<Service>(existing?.service ?? 'Reparo de lataria')
-  const [parts, setParts] = useState(existing?.parts ?? suggest(info.group, 'Reparo de lataria', 'moderada').parts)
-  const [labor, setLabor] = useState(existing?.labor ?? suggest(info.group, 'Reparo de lataria', 'moderada').labor)
+  const [service, setService] = useState<Service>(existing?.service ?? defaultService(info.group))
+  const [parts, setParts] = useState(existing?.parts ?? suggest(info.group, defaultService(info.group), 'moderada').parts)
+  const [labor, setLabor] = useState(existing?.labor ?? suggest(info.group, defaultService(info.group), 'moderada').labor)
   const [note, setNote] = useState(existing?.note ?? '')
 
   const resuggest = (sv: Service, sev: Severity) => {

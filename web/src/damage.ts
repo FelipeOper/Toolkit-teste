@@ -26,6 +26,8 @@ export interface Damage {
 
 // Valores-base PLACEHOLDER (R$) por grupo e serviço. Trocar pela tabela real da oficina.
 const BASE: Record<Group, Record<Service, number>> = {
+  grade:          { 'Reparo de lataria': 500, 'Pintura': 600, 'Troca da peça': 2400, 'Polimento': 150, 'Revisão elétrica': 250 },
+  mecanica:       { 'Reparo de lataria': 300, 'Pintura': 150, 'Troca da peça': 3500, 'Polimento': 0, 'Revisão elétrica': 400 },
   cabine:         { 'Reparo de lataria': 900, 'Pintura': 1200, 'Troca da peça': 4500, 'Polimento': 350, 'Revisão elétrica': 400 },
   vidros:         { 'Reparo de lataria': 0, 'Pintura': 0, 'Troca da peça': 2800, 'Polimento': 150, 'Revisão elétrica': 300 },
   iluminacao:     { 'Reparo de lataria': 0, 'Pintura': 0, 'Troca da peça': 1600, 'Polimento': 120, 'Revisão elétrica': 350 },
@@ -40,6 +42,16 @@ const BASE: Record<Group, Record<Service, number>> = {
   outros:         { 'Reparo de lataria': 500, 'Pintura': 500, 'Troca da peça': 2000, 'Polimento': 200, 'Revisão elétrica': 300 },
 }
 const SEV_FACTOR: Record<Severity, number> = { leve: 0.6, moderada: 1, grave: 1.7 }
+
+/** Serviço mais comum por tipo de peça (vidro e farol normalmente são trocados, não reparados). */
+export function defaultService(group: Group): Service {
+  switch (group) {
+    case 'vidros': case 'iluminacao': case 'rodas': case 'combustivel': case 'escape': case 'quinta-roda': case 'mecanica':
+      return 'Troca da peça'
+    case 'eletrica': return 'Revisão elétrica'
+    default: return 'Reparo de lataria'
+  }
+}
 
 /** Sugestão de valores; o usuário pode editar. Mão de obra = ~45% do total, peças = ~55%. */
 export function suggest(group: Group, service: Service, severity: Severity) {

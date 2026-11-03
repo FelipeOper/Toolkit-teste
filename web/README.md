@@ -14,4 +14,4 @@ npm run dev      # http://localhost:5173
 - Os valores sugeridos em `src/damage.ts` são de exemplo; trocar pela tabela real da oficina.
 - Nomes das peças em português: `src/parts.ts` (mapeia o nome do objeto no .glb).
 
-Atualizar o modelo: rodar o script do Blender e copiar `models/fh540_blockout.glb` para `web/public/fh540.glb`.
+Atualizar o modelo: rodar o script do Blender e copiar `models/fh540.glb` para `web/public/fh540.glb`.
