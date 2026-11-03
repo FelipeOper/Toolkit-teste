@@ -25,8 +25,8 @@ Objetivo: gerar em Blender (por script Python) um cavalo mecânico Volvo FH 540 
 - [ ] Definir se inclui carreta agora ou só o cavalo mecânico
 
 ## 1. Ambiente
-- [ ] Instalar `bpy` (Blender headless) e testar render simples
-- [ ] Estrutura: `/blender`, `/models`, `/renders`, `/docs`
+- [x] Instalar `bpy` (Blender headless) e testar render simples (`pip install bpy==5.1.2` em venv)
+- [x] Estrutura: `/blender`, `/models`, `/renders`, `/docs`
 
 ## 2. Documento técnico
 - [ ] Dimensões reais (comprimento, largura, altura, entre-eixos, balanços, bitola, pneus)
@@ -66,3 +66,8 @@ Objetivo: gerar em Blender (por script Python) um cavalo mecânico Volvo FH 540 
 - [ ] Supabase (clientes, veículos, avarias, orçamentos)
 - [ ] Orçamento e PDF com imagens do 3D
 - [ ] Dashboard e pátio
+
+## Status
+- v0 (blockout): `blender/build_fh540.py` gera `models/fh540_blockout.glb` (73 peças nomeadas) e renders em `renders/`. Proporções aproximadas, formas ainda caixas. Falta: câmera lateral enquadrada, formas da cabine FH, dados oficiais.
+
+Rodar: `python3 -m venv /tmp/venv-bpy && /tmp/venv-bpy/bin/pip install bpy==5.1.2 && /tmp/venv-bpy/bin/python blender/build_fh540.py --render`
