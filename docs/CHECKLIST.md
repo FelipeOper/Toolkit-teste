@@ -69,5 +69,6 @@ Objetivo: gerar em Blender (por script Python) um cavalo mecânico Volvo FH 540 
 
 ## Status
 - v0 (blockout): `blender/build_fh540.py` gera `models/fh540_blockout.glb` (73 peças nomeadas) e renders em `renders/`. Proporções aproximadas, formas ainda caixas. Falta: câmera lateral enquadrada, formas da cabine FH, dados oficiais.
+- v0.1 (visualizador web): `web/` – girar, zoom, clicar na peça, avaria por gravidade, orçamento (localStorage). Ver `web/README.md`.
 
 Rodar: `python3 -m venv /tmp/venv-bpy && /tmp/venv-bpy/bin/pip install bpy==5.1.2 && /tmp/venv-bpy/bin/python blender/build_fh540.py --render`

@@ -62,7 +62,7 @@ def cyl(name, r, depth, loc, rot=(0, 0, 0), material="steel", verts=32, bevel=0.
     o.name = name
     return finish(o, material, bevel)
 
-SIDE = {"L": -1, "R": 1}
+SIDE = {"L": 1, "R": -1}  # frente = -y => direita do caminhao = -x
 
 # ---------- dimensoes ----------
 W = 2.50            # largura da cabine
@@ -106,8 +106,8 @@ box("license_plate_front", (0.52, 0.02, 0.13), (0, CAB_Y0 - 0.31, 0.72), "chrome
 for s, sx in SIDE.items():
     cyl(f"fuel_tank_{s}", 0.36, 1.35, (sx * 1.0, 2.4, 0.55), rot=(math.radians(90), 0, 0), material="chrome")
     box(f"mudguard_rear_{s}", (0.45, 0.9, 0.04), (sx * 1.05, AX_D1 + 0.65, 1.08), "plastic", 0.02)
-box("battery_box", (0.55, 0.70, 0.45), (-1.05, 1.1, 0.62), "plastic", 0.03)
-cyl("exhaust_pipe", 0.07, 2.2, (1.20, CAB_Y1 + 0.18, 2.20), material="chrome")
+box("battery_box", (0.55, 0.70, 0.45), (1.05, 1.1, 0.62), "plastic", 0.03)
+cyl("exhaust_pipe", 0.07, 2.2, (-1.20, CAB_Y1 + 0.18, 2.20), material="chrome")
 box("air_tank", (0.30, 0.95, 0.30), (1.0, 3.0, 0.45), "steel", 0.05)
 
 # ---------- rodas ----------
