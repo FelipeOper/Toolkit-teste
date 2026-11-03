@@ -1,0 +1,68 @@
+# Checklist: Volvo FH 540 (modelo 3D de teste)
+
+Objetivo: gerar em Blender (por script Python) um cavalo mecânico Volvo FH 540 com peças separadas e nomeadas, exportar `.glb` e usar num visualizador 3D de avarias.
+
+## Dados já levantados (não oficiais, a confirmar na ficha da Volvo Brasil)
+
+**Mecânica**
+- Motor D13K540: 13 L, 6 cilindros, turbo, common rail, 540 cv (397-405 kW), ~2.600 Nm, Euro 6, freio-motor VEB+
+- Câmbio I-Shift 12 marchas (ex.: AT2612F); retarder hidráulico opcional
+- Configurações 4x2, 6x2, 6x4, 8x4; eixo de tração simples ou com redução no cubo
+
+**Dimensões (variam entre anúncios)**
+- Largura 2.550 mm; entre-eixos 3.200-4.600 mm; altura ~3,86 m (um anúncio)
+- Cabines Globetrotter e Globetrotter XL (sem medidas ainda)
+
+**Elétrica**
+- Rede CAN com unidades independentes (TEA2+), módulo central CCIOM
+- Sistema 24 V, conversor DC/DC para 12 V (rádio, tomadas)
+- Volvo proíbe ligar equipamento de terceiros nas redes internas
+
+## 0. Dados necessários
+- [ ] Ficha técnica Volvo Brasil do FH 540 (PDF com cotas)
+- [ ] Fotos de referência: frente, traseira, laterais, três quartos
+- [ ] Configuração-base (sugestão: cavalo mecânico 6x2 ou 6x4, Globetrotter)
+- [ ] Definir se inclui carreta agora ou só o cavalo mecânico
+
+## 1. Ambiente
+- [ ] Instalar `bpy` (Blender headless) e testar render simples
+- [ ] Estrutura: `/blender`, `/models`, `/renders`, `/docs`
+
+## 2. Documento técnico
+- [ ] Dimensões reais (comprimento, largura, altura, entre-eixos, balanços, bitola, pneus)
+- [ ] Componentes mecânicos: motor, câmbio, retarder, eixos, suspensão, freios, tanques, escapamento, quinta roda
+- [ ] Componentes elétricos: baterias, alternador, CCIOM, chicotes, iluminação, sensores, painel
+- [ ] Mapa componente -> avarias possíveis (alimenta o orçamento)
+
+## 3. Modelagem 3D (Blender, por código)
+- [ ] Cabine: teto, para-brisa, portas, laterais, traseira, defletor, spoiler, viseira
+- [ ] Frente: grade, para-choque, faróis, LEDs, placa, estribos
+- [ ] Vidros e retrovisores (principal e grande-angular)
+- [ ] Chassi: longarinas, travessas, tanques, caixa de baterias, escapamento, para-lamas, defletores laterais
+- [ ] Rodas e eixos: pneus, rodas, cubos, suspensão a ar
+- [ ] Quinta roda e engates
+- [ ] Nomes padronizados por peça (`cab_door_L`, `bumper_front`, `tank_L`...)
+- [ ] Opcional: camada "raio-X" com componentes mecânicos e elétricos
+
+## 4. Materiais
+- [ ] Tinta metálica, vidro, borracha, cromado, plástico
+- [ ] Logo: usar genérico ou sem logo, salvo confirmação de direito de uso da marca
+
+## 5. Renders de conferência
+- [ ] Frente, traseira, laterais, três quartos
+- [ ] Render com cada peça colorida (checar nomes)
+- [ ] Comparação com as fotos de referência e ajustes
+
+## 6. Exportação
+- [ ] `.glb` otimizado
+- [ ] Validar no Three.js e clique por peça
+
+## 7. Visualizador web (protótipo)
+- [ ] React + React Three Fiber: girar, zoom, clicar na peça
+- [ ] Destaque por peça e cor por gravidade (leve, moderada, grave)
+- [ ] Painel lateral da avaria (tipo, gravidade, serviço, valor)
+
+## 8. Depois do protótipo
+- [ ] Supabase (clientes, veículos, avarias, orçamentos)
+- [ ] Orçamento e PDF com imagens do 3D
+- [ ] Dashboard e pátio
