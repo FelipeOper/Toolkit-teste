@@ -23,3 +23,4 @@ dist-ssr
 *.sln
 *.sw?
 public/fh540.glb.txt
+public/*.glb.txt

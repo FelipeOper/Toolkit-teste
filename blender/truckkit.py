@@ -340,6 +340,26 @@ def patch(name, sk, outline, axis, a0, a1, material, keep=True):
     return finish(p, material, keep=keep, angle=60)
 
 
+def rrect(x0, x1, z0, z1, r, n=4):
+    """Retangulo de cantos arredondados (contorno 2D)."""
+    pts = []
+    for cx, cz, a0 in ((x1 - r, z1 - r, 0), (x0 + r, z1 - r, 90), (x0 + r, z0 + r, 180), (x1 - r, z0 + r, 270)):
+        for i in range(n + 1):
+            a = math.radians(a0 + 90 * i / n)
+            pts.append((cx + r * math.cos(a), cz + r * math.sin(a)))
+    return pts
+
+
+def ctank(name, x, y0, y1, z, r, material="alu", straps=2):
+    """Tanque cilindrico ao longo de y, com cintas pretas."""
+    t = cyl(name + "_body", r, y1 - y0, (x, (y0 + y1) / 2, z), "y", material, 48, bev=0.04, keep=False)
+    parts = [t]
+    for i in range(straps):
+        yy = y0 + (y1 - y0) * (i + 1) / (straps + 1)
+        parts.append(cyl("strap", r + 0.008, 0.05, (x, yy, z), "y", "plastic", 48, keep=False))
+    return join(name, parts)
+
+
 def scale_poly(poly, k):
     cx = sum(p[0] for p in poly) / len(poly)
     cy = sum(p[1] for p in poly) / len(poly)

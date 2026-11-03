@@ -1,6 +1,9 @@
-// Gera public/fh540.glb.txt (base64) a partir de public/fh540.glb.
+// Gera public/<modelo>.glb.txt (base64) para cada public/*.glb.
 // O visualizador lê o texto e decodifica no navegador (hospedagens que não servem .glb).
-import { readFileSync, writeFileSync } from 'node:fs'
-const buf = readFileSync(new URL('../public/fh540.glb', import.meta.url))
-writeFileSync(new URL('../public/fh540.glb.txt', import.meta.url), buf.toString('base64'))
-console.log('fh540.glb.txt', buf.length, 'bytes ->', Math.ceil(buf.length * 4 / 3))
+import { readFileSync, writeFileSync, readdirSync } from 'node:fs'
+const dir = new URL('../public/', import.meta.url)
+for (const f of readdirSync(dir).filter(n => n.endsWith('.glb'))) {
+  const buf = readFileSync(new URL(f, dir))
+  writeFileSync(new URL(f + '.txt', dir), buf.toString('base64'))
+  console.log(f + '.txt', buf.length, 'bytes')
+}

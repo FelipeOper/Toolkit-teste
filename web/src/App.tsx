@@ -11,8 +11,15 @@ import {
   type Damage, type DamageType, type Service, type Severity,
 } from './damage'
 
-const MODEL = `${import.meta.env.BASE_URL}fh540.glb.txt`  // GLB em base64
-const STORE = 'fh540-damages-v1'
+// Caminhões disponíveis. O .glb vem em base64 (.glb.txt) porque algumas hospedagens não servem .glb.
+const MODELS = [
+  { id: 'fh540', name: 'Volvo FH 540', sub: 'Cavalo mecânico 6x4 Globetrotter · modelo em desenvolvimento', center: 1.8 },
+  { id: 'xf530', name: 'DAF XF 530', sub: 'Cavalo mecânico 6x4 Space Cab · v0.1 (pelas fotos)', center: 2.1 },
+] as const
+type ModelId = (typeof MODELS)[number]['id']
+const modelUrl = (id: ModelId) => `${import.meta.env.BASE_URL}${id}.glb.txt`
+const storeKey = (id: ModelId) => `${id}-damages-v1`
+const MODEL_KEY = 'truck-model-v1'
 
 const VIEWS: Record<string, { pos: [number, number, number]; target: [number, number, number] }> = {
   'Frente': { pos: [0, 2.4, -13], target: [0, 1.6, 1.8] },
@@ -23,13 +30,20 @@ const VIEWS: Record<string, { pos: [number, number, number]; target: [number, nu
   'Topo': { pos: [0, 16, 1.8], target: [0, 0, 1.7] },
 }
 
-function CameraRig({ view, controls }: { view: string; controls: React.RefObject<OrbitControlsImpl | null> }) {
+/** Desloca as vistas ao longo do comprimento do caminhão (centro em z da cena). */
+function viewAt(view: string, center: number) {
+  const v = VIEWS[view], d = center - 1.8
+  return { pos: [v.pos[0], v.pos[1], v.pos[2] + d] as [number, number, number],
+           target: [v.target[0], v.target[1], v.target[2] + d] as [number, number, number] }
+}
+
+function CameraRig({ view, center, controls }: { view: string; center: number; controls: React.RefObject<OrbitControlsImpl | null> }) {
   const { camera } = useThree()
   const goal = useRef<{ pos: THREE.Vector3; target: THREE.Vector3 } | null>(null)
   useEffect(() => {
-    const v = VIEWS[view]
+    const v = viewAt(view, center)
     goal.current = { pos: new THREE.Vector3(...v.pos), target: new THREE.Vector3(...v.target) }
-  }, [view])
+  }, [view, center])
   useFrame((_, dt) => {
     const g = goal.current, c = controls.current
     if (!g || !c) return
@@ -63,21 +77,40 @@ function useModel(url: string) {
   return { scene, error }
 }
 
-function loadDamages(): Record<string, Damage> {
-  try { return JSON.parse(localStorage.getItem(STORE) || '{}') } catch { return {} }
+function loadDamages(id: ModelId): Record<string, Damage> {
+  try { return JSON.parse(localStorage.getItem(storeKey(id)) || '{}') } catch { return {} }
+}
+
+function loadModelId(): ModelId {
+  try {
+    const v = localStorage.getItem(MODEL_KEY)
+    if (MODELS.some(m => m.id === v)) return v as ModelId
+  } catch { /* sem storage */ }
+  return 'fh540'
 }
 
 export default function App() {
-  const [damages, setDamages] = useState<Record<string, Damage>>(loadDamages)
+  const [modelId, setModelId] = useState<ModelId>(loadModelId)
+  const info = MODELS.find(m => m.id === modelId)!
+  const [all, setAll] = useState<Record<string, Record<string, Damage>>>(
+    () => Object.fromEntries(MODELS.map(m => [m.id, loadDamages(m.id)])))
+  const damages = all[modelId] ?? {}
+  const setDamages = (fn: (p: Record<string, Damage>) => Record<string, Damage>) =>
+    setAll(a => ({ ...a, [modelId]: fn(a[modelId] ?? {}) }))
   const [selected, setSelected] = useState<string | null>(null)
   const [hover, setHover] = useState<{ name: string; point: THREE.Vector3 } | null>(null)
   const [view, setView] = useState('3/4')
+  const [confirmClear, setConfirmClear] = useState(false)
   const controls = useRef<OrbitControlsImpl | null>(null)
-  const { scene: model, error: modelError } = useModel(MODEL)
+  const { scene: model, error: modelError } = useModel(modelUrl(modelId))
 
   useEffect(() => {
-    try { localStorage.setItem(STORE, JSON.stringify(damages)) } catch { /* sem storage */ }
-  }, [damages])
+    try { for (const m of MODELS) localStorage.setItem(storeKey(m.id), JSON.stringify(all[m.id] ?? {})) } catch { /* sem storage */ }
+  }, [all])
+  useEffect(() => {
+    try { localStorage.setItem(MODEL_KEY, modelId) } catch { /* sem storage */ }
+    setSelected(null); setHover(null); setView('3/4')
+  }, [modelId])
 
   const total = useMemo(
     () => Object.values(damages).reduce((s, d) => s + d.parts + d.labor, 0), [damages])
@@ -135,7 +168,7 @@ export default function App() {
           )}
           <OrbitControls ref={controls} makeDefault enableDamping maxPolarAngle={Math.PI / 2 - 0.02}
             minDistance={3} maxDistance={30} target={VIEWS['3/4'].target} />
-          <CameraRig view={view} controls={controls} />
+          <CameraRig view={view} center={info.center} controls={controls} />
         </Canvas>
         {!model && <div className="loading">{modelError ? `Erro ao carregar o modelo: ${modelError}` : 'Carregando modelo…'}</div>}
         <div className="hint">Arraste para girar · role para aproximar · clique em uma peça</div>
@@ -148,8 +181,13 @@ export default function App() {
 
       <aside className="panel">
         <header>
-          <h1>Volvo FH 540</h1>
-          <p>Cavalo mecânico 6x4 Globetrotter · modelo em desenvolvimento</p>
+          <label className="pick">Caminhão
+            <select id="truck" value={modelId} onChange={e => setModelId(e.target.value as ModelId)}>
+              {MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          </label>
+          <h1>{info.name}</h1>
+          <p>{info.sub}</p>
         </header>
 
         {selected
@@ -170,8 +208,10 @@ export default function App() {
           ))}
           <div className="total"><span>Total do orçamento</span><b>{brl(total)}</b></div>
           {Object.keys(damages).length > 0 && (
-            <button className="ghost" onClick={() => { if (confirm('Limpar todas as avarias?')) { setDamages({}); setSelected(null) } }}>
-              Limpar tudo
+            <button className={confirmClear ? 'danger wide' : 'ghost'}
+              onClick={() => { if (confirmClear) { setDamages(() => ({})); setSelected(null); setConfirmClear(false) } else setConfirmClear(true) }}
+              onBlur={() => setConfirmClear(false)}>
+              {confirmClear ? 'Clique de novo para apagar todas' : 'Limpar tudo'}
             </button>
           )}
         </section>

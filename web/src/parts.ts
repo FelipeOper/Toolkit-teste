@@ -18,6 +18,13 @@ const sided = (re: RegExp, group: Group, label: string, fem = false): Rule => ({
 const rules: Rule[] = [
   // ---- cabine (lataria)
   fixed(/^cab_structure/, 'cabine', 'Cabine – estrutura'),
+  sided(/^cab_side_lower_([LR])/, 'cabine', 'Painel lateral inferior', false),
+  fixed(/^cab_hood/, 'cabine', 'Painel frontal (capô)'),
+  fixed(/^cab_cowl/, 'cabine', 'Grade de ventilação do para-brisa'),
+  sided(/^cab_corner_panel_([LR])/, 'cabine', 'Painel de canto dianteiro', false),
+  sided(/^cab_corner_vent_([LR])/, 'cabine', 'Entrada de ar do canto', true),
+  fixed(/^cab_sun_visor/, 'cabine', 'Quebra-sol'),
+  sided(/^cab_roof_light_([LR])/, 'iluminacao', 'Luz de teto', true),
   sided(/^cab_door_([LR])$/, 'cabine', 'Porta', true),
   sided(/^cab_door_handle_([LR])/, 'cabine', 'Maçaneta', true),
   sided(/^cab_side_panel_([LR])/, 'cabine', 'Painel lateral do dormitório', false),
@@ -44,6 +51,10 @@ const rules: Rule[] = [
   fixed(/^cab_rear_recess/, 'cabine', 'Nicho traseiro do pós-tratamento'),
   fixed(/^antenna/, 'eletrica', 'Antena'),
   // ---- grade e frente
+  fixed(/^grille_frame/, 'grade', 'Moldura da grade'),
+  fixed(/^grille_bar_top/, 'grade', 'Barra cromada superior da grade'),
+  { re: /^grille_slat_(\d)/, group: 'grade', label: m => `Friso cromado da grade ${Number(m[1]) + 1}` },
+  { re: /^grille_mesh_(\d)/, group: 'grade', label: m => `Tela da grade ${Number(m[1]) + 1}` },
   fixed(/^grille_mesh_upper/, 'grade', 'Grade hexagonal superior'),
   fixed(/^grille_mesh_mid/, 'grade', 'Grade hexagonal intermediária'),
   fixed(/^grille_mesh_lower/, 'grade', 'Grade hexagonal inferior'),
@@ -54,6 +65,7 @@ const rules: Rule[] = [
   fixed(/^grille_radar_plate/, 'eletrica', 'Placa do radar / sensor frontal'),
   fixed(/^bumper_front/, 'para-choque', 'Para-choque dianteiro'),
   fixed(/^bumper_center_plate/, 'para-choque', 'Placa central do para-choque'),
+  fixed(/^bumper_chrome/, 'para-choque', 'Friso cromado do para-choque'),
   fixed(/^rear_bumper_beam/, 'para-choque', 'Travessa traseira'),
   // ---- vidros e espelhos
   fixed(/^windshield_camera/, 'eletrica', 'Câmera do para-brisa'),
